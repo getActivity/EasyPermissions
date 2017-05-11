@@ -15,8 +15,7 @@
 #### 通用代码（在Activity或Fragment下请求权限，可直接复制）
 
     private EasyPermission easyPermission;
-    private final String[] requestPermission = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, 
-															Manifest.permission.WRITE_EXTERNAL_STORAGE};
+    private final String[] requestPermission = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     //打开文件
     public void openFile(){
@@ -50,8 +49,7 @@
 
 	private SimplePermission simplePermission;
     private final int requestCode = 100;
-    private final String[] requestPermission = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, 
-															Manifest.permission.WRITE_EXTERNAL_STORAGE};
+    private final String[] requestPermission = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE};
 
     //打开文件
     public void openFile(){
