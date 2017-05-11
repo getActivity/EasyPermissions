@@ -23,7 +23,7 @@
         easyPermission = new EasyPermission(this, requestPermission, new EasyRequestBackCall() {
             @Override
             public void requestSucceed() {
-		System.out.println("获取SD卡读取写入权限成功");
+                System.out.println("获取SD卡读取写入权限成功");
             }
 
             @Override
