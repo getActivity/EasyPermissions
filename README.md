@@ -1,6 +1,6 @@
 # 权限请求框架
 
->直接复制到项目包下即可
+>直接将Permission文件夹复制到项目包下即可
 
 >支持以下类或子类中进行的请求权限操作
 
@@ -23,7 +23,7 @@
         easyPermission = new EasyPermission(this, requestPermission, new EasyRequestBackCall() {
             @Override
             public void requestSucceed() {
-				System.out.println("获取SD卡读取写入权限成功");
+		System.out.println("获取SD卡读取写入权限成功");
             }
 
             @Override
