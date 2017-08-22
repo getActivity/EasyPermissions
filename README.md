@@ -35,7 +35,7 @@
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-		//覆盖Activity或Fragment中的方法，多个请求只需要调用一次
+        //覆盖Activity或Fragment中的方法，多个请求只需要调用一次
         EasyPermission.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
@@ -55,7 +55,7 @@
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-		//覆盖Activity或Fragment中的方法，多个请求只需要调用一次
+        //覆盖Activity或Fragment中的方法，多个请求只需要调用一次
         SimplePermission.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
