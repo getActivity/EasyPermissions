@@ -1,8 +1,5 @@
-package com.hjq.md.permission;
+package com.hjq.md.Permission;
 
-import android.support.annotation.NonNull;
-
-import java.util.HashMap;
 import java.util.Random;
 
 /**
@@ -11,87 +8,66 @@ import java.util.Random;
 
 public class EasyPermission {
 
-    public interface EasyRequestBackCall {
-
-        /**
-         * 权限请求成功时回调
-         * @param succeedPermissions    请求成功的权限组
-         */
-        void requestSucceed(String[] succeedPermissions);
-
-        /**
-         * 权限请求失败时回调
-         * @param failPermissions   请求失败的权限组
-         */
-        void requestFail(String[] failPermissions);
-    }
-
-    private static HashMap<Integer, EasyRequestBackCall> mHashMap = new HashMap();
+    private int mRequestCode;
+    private String[] mRequestPermissions;
+    private EasyRequestBackCall mRequestBackCall;
 
     /**
-     * 请求权限，不需要指定请求码，请求结果通过回调接口方式实现
+     * 创建一个权限请求对象
      * @param object            Activity或Fragment对象
-     * @param call              用于接收结果的回调
-     * @param permissions       需要请求的权限组
+     * @param permissions       请求的权限数组
+     * @param requestBackCall   用于接收结果的回调
      */
-    public static void requestPermissions(Object object, EasyRequestBackCall call, String... permissions){
-
-        PermissionUtils.checkObject(object);
-
-        PermissionUtils.isEmptyPermissions(permissions);
-
-        if (call == null) {
-            throw new NullPointerException("权限请求回调接口没有被实现");
+    public EasyPermission(Object object, String[] permissions, EasyRequestBackCall requestBackCall){
+        if (object == null) {
+            throw new NullPointerException("必须传入Activity或Fragment");
+        }else if (!PermissionUtils.isCorrectObject(object)){
+            throw new IllegalArgumentException(object.getClass().getSimpleName() + "这个对象不是Activity或Fragment");
         }
 
-        int requestCode;
+        if (requestBackCall == null) {
+            throw new NullPointerException("权限请求回调接口没有被实现");
+        }else{
+            this.mRequestBackCall = requestBackCall;
+        }
+        this.mRequestPermissions = permissions;
+        this.mRequestCode = new Random().nextInt(65535);
 
-        //请求码随机生成，必须小于65536，避免随机产生之前的请求码，必须进行循环判断
-        do {
-            requestCode = new Random().nextInt(65535);
-        }while (mHashMap.get(requestCode) != null);
-
-        //如果版本不是6.0及以上，直接回调接口方法
+        //如果版本不是6.0及以上,通过注解的形式，反射执行方法
         if(!(PermissionUtils.isOverMarshmallow())){
-            call.requestSucceed(permissions);
+            mRequestBackCall.requestSucceed();
             return;
         }
 
-        String[] failPermissions = PermissionUtils.getFailPermissions(object, permissions);
+        String[] deniedPermissions = PermissionUtils.getDeniedPermissions(object, permissions);
 
-        if (failPermissions.length == 0){
+        if (deniedPermissions.length == 0){
             //证明权限已经全部授予过
-            call.requestSucceed(permissions);
+            mRequestBackCall.requestSucceed();
+            return;
         }else{
-            mHashMap.put(requestCode, call);
             //申请没有授予过的权限
-            PermissionUtils.requestPermissions(object, failPermissions, requestCode);
+            PermissionUtils.requestPermissions(object, deniedPermissions, mRequestCode);
         }
     }
 
     /**
-     * 在Activity或Fragment中的同名方法调用此方法
+     * 处理申请权限的回调
      */
-    public static void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(Object object, int requestCode, String[] permissions) {
 
-        EasyRequestBackCall call = mHashMap.get(requestCode);
-
-        //根据请求码取出的对象为空，就直接返回不处理
-        if (call == null){
+        if (mRequestCode != requestCode || !PermissionUtils.equalStringArray(mRequestPermissions, permissions)) {
             return;
         }
 
         //再次获取没有授予的权限
-        String[] failPermissions = PermissionUtils.getFailPermissions(permissions, grantResults);
-        if (failPermissions.length == 0){
+        String[] deniedPermissions = PermissionUtils.getDeniedPermissions(object, permissions);
+        if (deniedPermissions.length == 0){
             //代表申请的所有的权限都授予了
-            call.requestSucceed(permissions);
+            mRequestBackCall.requestSucceed();
         }else{
             //代表申请的权限中有不同意授予的
-            call.requestFail(failPermissions);
+            mRequestBackCall.requestFail(deniedPermissions);
         }
-
-        //权限回调结束后要删除集合中的对象，避免重复请求
-        mHashMap.remove(requestCode);
     }
 }
