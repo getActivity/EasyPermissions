@@ -1,5 +1,7 @@
 package com.hjq.md.permission;
 
+import android.app.Activity;
+import android.app.Fragment;
 import android.support.annotation.NonNull;
 
 import java.util.HashMap;
@@ -30,11 +32,35 @@ public class EasyPermission {
 
     /**
      * 请求权限，不需要指定请求码，请求结果通过回调接口方式实现
-     * @param object            Activity或Fragment对象
+     * @param activity          Activity对象
      * @param call              用于接收结果的回调
      * @param permissions       需要请求的权限组
      */
-    public static void requestPermissions(Object object, EasyRequestBackCall call, String... permissions){
+    public static void requestPermissions(Activity activity, EasyRequestBackCall call, String... permissions) {
+        requestPermissions((Object) activity, call, permissions);
+    }
+
+    /**
+     * 请求权限，不需要指定请求码，请求结果通过回调接口方式实现
+     * @param fragment          Fragment对象
+     * @param call              用于接收结果的回调
+     * @param permissions       需要请求的权限组
+     */
+    public static void requestPermissions(Fragment fragment, EasyRequestBackCall call, String... permissions) {
+        requestPermissions((Object) fragment, call, permissions);
+    }
+
+    /**
+     * 请求权限，不需要指定请求码，请求结果通过回调接口方式实现
+     * @param fragment          v4包下的Fragment对象
+     * @param call              用于接收结果的回调
+     * @param permissions       需要请求的权限组
+     */
+    public static void requestPermissions(android.support.v4.app.Fragment fragment, EasyRequestBackCall call, String... permissions) {
+        requestPermissions((Object) fragment, call, permissions);
+    }
+
+    private static void requestPermissions(Object object, EasyRequestBackCall call, String... permissions) {
 
         PermissionUtils.checkObject(object);
 
@@ -49,20 +75,20 @@ public class EasyPermission {
         //请求码随机生成，必须小于65536，避免随机产生之前的请求码，必须进行循环判断
         do {
             requestCode = new Random().nextInt(65535);
-        }while (mHashMap.get(requestCode) != null);
+        } while (mHashMap.get(requestCode) != null);
 
         //如果版本不是6.0及以上，直接回调接口方法
-        if(!(PermissionUtils.isOverMarshmallow())){
+        if(!(PermissionUtils.isOverMarshmallow())) {
             call.requestSucceed(permissions);
             return;
         }
 
         String[] failPermissions = PermissionUtils.getFailPermissions(object, permissions);
 
-        if (failPermissions.length == 0){
+        if (failPermissions.length == 0) {
             //证明权限已经全部授予过
             call.requestSucceed(permissions);
-        }else{
+        } else {
             mHashMap.put(requestCode, call);
             //申请没有授予过的权限
             PermissionUtils.requestPermissions(object, failPermissions, requestCode);
@@ -77,16 +103,16 @@ public class EasyPermission {
         EasyRequestBackCall call = mHashMap.get(requestCode);
 
         //根据请求码取出的对象为空，就直接返回不处理
-        if (call == null){
+        if (call == null) {
             return;
         }
 
         //再次获取没有授予的权限
         String[] failPermissions = PermissionUtils.getFailPermissions(permissions, grantResults);
-        if (failPermissions.length == 0){
+        if (failPermissions.length == 0) {
             //代表申请的所有的权限都授予了
             call.requestSucceed(permissions);
-        }else{
+        } else {
             //代表申请的权限中有不同意授予的
             call.requestFail(failPermissions);
         }

@@ -3,13 +3,14 @@ package com.hjq.md.permission;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
-import com.hjq.md.permission.annotations.NoPermission;
 import com.hjq.md.permission.annotations.HasPermission;
+import com.hjq.md.permission.annotations.NoPermission;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -45,11 +46,11 @@ public class PermissionUtils {
         //获取class中所有的方法，然后逐个遍历
         Method[] methods  = object.getClass().getDeclaredMethods();
         //遍历找到我们打了标记的方法
-        for (Method method : methods){
+        for (Method method : methods) {
             //System.out.println(method);
             //获取该方法上面有没有打这个注解
             HasPermission succeedMethod = method.getAnnotation(HasPermission.class);
-            if (succeedMethod != null){
+            if (succeedMethod != null) {
                 int methodCode = succeedMethod.value();
                 //并且我们的请求码必须要一致
                 if (methodCode == requestCode){
@@ -93,10 +94,10 @@ public class PermissionUtils {
             //System.out.println(method);
             //获取该方法上面有没有打这个注解
             NoPermission failMethod = method.getAnnotation(NoPermission.class);
-            if (failMethod != null){
+            if (failMethod != null) {
                 int methodCode = failMethod.value();
                 //并且我们的请求码必须要一致
-                if (methodCode == requestCode){
+                if (methodCode == requestCode) {
 
                     method.setAccessible(true);//允许执行私有方法
                     try {
@@ -128,7 +129,7 @@ public class PermissionUtils {
      */
     public static String[] getFailPermissions(Object object, String[] requestPermissions) {
         List<String> failPermissions = new ArrayList<>();
-        for (String permission : requestPermissions){
+        for (String permission : requestPermissions) {
             //把没有授予过的权限加入到集合中
             if (ContextCompat.checkSelfPermission(getContext(object), permission) == PackageManager.PERMISSION_DENIED){
                 failPermissions.add(permission);
@@ -144,10 +145,10 @@ public class PermissionUtils {
      */
     public static String[] getFailPermissions(String[] requestPermissions, int[] grantResults) {
         List<String> failPermissions = new ArrayList<>();
-        for (int i = 0; i < grantResults.length ; i++){
+        for (int i = 0; i < grantResults.length ; i++) {
 
             //把没有授予过的权限加入到集合中，-1表示没有授予，0表示已经授予
-            if (grantResults[i] == -1){
+            if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
                 failPermissions.add(requestPermissions[i]);
             }
         }
@@ -155,18 +156,18 @@ public class PermissionUtils {
     }
 
     /**
-     * 获取Object的Activity对象
+     * 获取Object的Context对象
      * @param object        Activity或Fragment对象
      */
     @SuppressLint("NewApi")
-    public static Activity getContext(Object object) {
+    public static Context getContext(Object object) {
 
-        if (object instanceof Activity){
-            return (Activity) object;
-        }else if (object instanceof android.support.v4.app.Fragment){
-            return ((android.support.v4.app.Fragment)object).getActivity();
-        }else if(object instanceof Fragment){
-            return ((Fragment)object).getActivity();
+        if (object instanceof Activity) {
+            return ((Activity) object).getBaseContext();
+        }else if (object instanceof android.support.v4.app.Fragment) {
+            return ((android.support.v4.app.Fragment) object).getContext();
+        }else if(object instanceof Fragment) {
+            return ((Fragment) object).getContext();
         }
         return null;
     }
@@ -179,11 +180,11 @@ public class PermissionUtils {
      */
     @SuppressLint("NewApi")
     public static void requestPermissions(Object object, String[] permissions, int requestCode) {
-        if (object instanceof Activity){
+        if (object instanceof Activity) {
             ActivityCompat.requestPermissions((Activity) object, permissions, requestCode);
-        }else if (object instanceof android.support.v4.app.Fragment){
+        }else if (object instanceof android.support.v4.app.Fragment) {
             ((android.support.v4.app.Fragment) object).requestPermissions(permissions, requestCode);
-        }else if(object instanceof Fragment){
+        }else if(object instanceof Fragment) {
             ((Fragment) object).requestPermissions(permissions, requestCode);
         }
     }
