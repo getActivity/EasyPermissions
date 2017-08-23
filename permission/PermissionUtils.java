@@ -24,9 +24,7 @@ import java.util.List;
 public class PermissionUtils {
 
     //不能被实例化
-    private PermissionUtils() {
-        throw new UnsupportedOperationException(this.getClass().getSimpleName() + "不能被实例化");
-    }
+    private PermissionUtils() {}
 
     /**
      * 是否是6.0以上版本

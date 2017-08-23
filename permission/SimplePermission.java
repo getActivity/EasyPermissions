@@ -11,6 +11,9 @@ import java.util.HashMap;
 
 public class SimplePermission {
 
+    //不能被实例化
+    private SimplePermission() {}
+
     private static HashMap<Integer, Object> mHashMap = new HashMap();
 
     /**

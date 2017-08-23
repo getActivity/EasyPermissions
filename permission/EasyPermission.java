@@ -13,6 +13,9 @@ import java.util.Random;
 
 public class EasyPermission {
 
+    //不能被实例化
+    private EasyPermission() {}
+
     public interface EasyRequestBackCall {
 
         /**
