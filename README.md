@@ -1,8 +1,8 @@
 # 权限请求框架
 
->直接将permission文件夹复制到项目包下即可
+> 直接将permission文件夹复制到项目包下即可
 
->支持以下类或子类中进行的请求权限操作
+> 支持以下类中进行的请求权限操作
 
 * android.app.Activity
 
@@ -10,12 +10,12 @@
 
 * android.support.v4.app.Fragment
 
-## 第一种方式（推荐）
+## 第一种方式（回调接口）
 
-#### 通用代码（在Activity或Fragment下请求权限示例，可直接复制）
+> 在Activity或Fragment下请求权限示例，可直接复制
 
-    //打开文件
-    public void openFile(){
+    //动态申请文件读写权限
+    public void requestFilePermissions(){
 		
         EasyPermission.requestPermissions(this, new EasyPermission.EasyRequestBackCall() {
             
@@ -32,30 +32,32 @@
         }, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE);
     }
 
+    //覆盖Activity或Fragment中的方法
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        //覆盖Activity或Fragment中的方法，多个请求只需要调用一次
+        //多个权限请求只需要调用一次
         EasyPermission.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-## 第二种方式
+## 第二种方式（注解方法）
 
-#### 通用代码（在Activity或Fragment下请求权限示例，可直接复制）
+> 在Activity或Fragment下请求权限示例，可直接复制
 
-    private static final int requestCode = 100;//权限请求码
+    private static final int requestCode = 100;//文件读取权限请求码
 
-    //打开文件
-    public void openFile(){
+    //动态申请文件读写权限
+    public void requestFilePermissions(){
 
         SimplePermission.requestPermissions(this, requestCode, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE);
     }
 
 
+    //覆盖Activity或Fragment中的方法
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        //覆盖Activity或Fragment中的方法，多个请求只需要调用一次
+        //多个权限请求只需要调用一次
         SimplePermission.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
