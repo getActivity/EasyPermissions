@@ -1,16 +1,19 @@
-package com.hjq.md.permission;
+package com.hjq.permission;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
-import com.hjq.md.permission.annotations.HasPermission;
-import com.hjq.md.permission.annotations.NoPermission;
+import com.hjq.permission.annotations.HasPermission;
+import com.hjq.permission.annotations.NoPermission;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -21,7 +24,7 @@ import java.util.List;
  * Created by HJQ on 2017-5-9.
  */
 
-public class PermissionUtils {
+final class PermissionUtils {
 
     //不能被实例化
     private PermissionUtils() {}
@@ -122,14 +125,20 @@ public class PermissionUtils {
 
     /**
      * 获取没有授予的权限
-     * @param object                Activity或Fragment对象
+     * @param context               上下文对象
      * @param requestPermissions    需要请求的权限组
      */
-    public static String[] getFailPermissions(Object object, String[] requestPermissions) {
+    public static String[] getFailPermissions(Context context, String[] requestPermissions) {
+
+        //如果是安卓6.0以下版本就返回一个长度为零的数组
+        if(!PermissionUtils.isOverMarshmallow()) {
+            return new String[]{};
+        }
+
         List<String> failPermissions = new ArrayList<>();
         for (String permission : requestPermissions) {
             //把没有授予过的权限加入到集合中
-            if (ContextCompat.checkSelfPermission(getContext(object), permission) == PackageManager.PERMISSION_DENIED){
+            if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_DENIED){
                 failPermissions.add(permission);
             }
         }
@@ -219,5 +228,17 @@ public class PermissionUtils {
         if (permissions == null || permissions.length == 0) {
             throw new IllegalArgumentException("需要请求的权限必须指定一个及以上");
         }
+    }
+
+    /**
+     * 跳转到应用权限设置页面
+     * @param context           上下文对象
+     */
+    public static void gotoPermissionSettings(Context context) {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        Uri uri = Uri.fromParts("package", context.getPackageName(), null);
+        intent.setData(uri);
+        context.startActivity(intent);
     }
 }

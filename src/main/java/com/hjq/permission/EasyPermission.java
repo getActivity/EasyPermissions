@@ -1,4 +1,4 @@
-package com.hjq.md.permission;
+package com.hjq.permission;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -11,12 +11,12 @@ import java.util.Random;
  * Created by HJQ on 2017-5-9.
  */
 
-public class EasyPermission {
+public final class EasyPermission extends BasePermission {
 
     //不能被实例化
     private EasyPermission() {}
 
-    public interface EasyRequestBackCall {
+    public interface OnRequestCallBack {
 
         /**
          * 权限请求成功时回调
@@ -31,15 +31,15 @@ public class EasyPermission {
         void requestFail(String[] failPermissions);
     }
 
-    private static HashMap<Integer, EasyRequestBackCall> mHashMap = new HashMap();
+    private final static HashMap<Integer, OnRequestCallBack> mHashMap = new HashMap();
 
     /**
      * 请求权限，不需要指定请求码，请求结果通过回调接口方式实现
      * @param activity          Activity对象
      * @param call              用于接收结果的回调
-     * @param permissions       需要请求的权限组
+     * @param permissions       需要请求的权限组，可变参数类型
      */
-    public static void requestPermissions(Activity activity, EasyRequestBackCall call, String... permissions) {
+    public static void requestPermissions(Activity activity, OnRequestCallBack call, String... permissions) {
         requestPermissions((Object) activity, call, permissions);
     }
 
@@ -47,9 +47,9 @@ public class EasyPermission {
      * 请求权限，不需要指定请求码，请求结果通过回调接口方式实现
      * @param fragment          Fragment对象
      * @param call              用于接收结果的回调
-     * @param permissions       需要请求的权限组
+     * @param permissions       需要请求的权限组，可变参数类型
      */
-    public static void requestPermissions(Fragment fragment, EasyRequestBackCall call, String... permissions) {
+    public static void requestPermissions(Fragment fragment, OnRequestCallBack call, String... permissions) {
         requestPermissions((Object) fragment, call, permissions);
     }
 
@@ -57,36 +57,29 @@ public class EasyPermission {
      * 请求权限，不需要指定请求码，请求结果通过回调接口方式实现
      * @param fragment          v4包下的Fragment对象
      * @param call              用于接收结果的回调
-     * @param permissions       需要请求的权限组
+     * @param permissions       需要请求的权限组，可变参数类型
      */
-    public static void requestPermissions(android.support.v4.app.Fragment fragment, EasyRequestBackCall call, String... permissions) {
+    public static void requestPermissions(android.support.v4.app.Fragment fragment, OnRequestCallBack call, String... permissions) {
         requestPermissions((Object) fragment, call, permissions);
     }
 
-    private static void requestPermissions(Object object, EasyRequestBackCall call, String... permissions) {
+    private static void requestPermissions(Object object, OnRequestCallBack call, String... permissions) {
 
         PermissionUtils.checkObject(object);
 
         PermissionUtils.isEmptyPermissions(permissions);
 
-        if (call == null) {
-            throw new NullPointerException("权限请求回调接口没有被实现");
-        }
+        if (call == null) throw new NullPointerException("权限请求回调接口必须要实现");
 
         int requestCode;
 
-        //请求码随机生成，必须小于65536，避免随机产生之前的请求码，必须进行循环判断
+        //请求码随机生成，避免随机产生之前的请求码，必须进行循环判断
         do {
-            requestCode = new Random().nextInt(65535);
+            requestCode = new Random().nextInt(65535);//Studio编译的APK请求码必须小于65536
+//            requestCode = new Random().nextInt(255);//Eclipse编译的APK请求码必须小于256
         } while (mHashMap.get(requestCode) != null);
 
-        //如果版本不是6.0及以上，直接回调接口方法
-        if(!(PermissionUtils.isOverMarshmallow())) {
-            call.requestSucceed(permissions);
-            return;
-        }
-
-        String[] failPermissions = PermissionUtils.getFailPermissions(object, permissions);
+        String[] failPermissions = PermissionUtils.getFailPermissions(PermissionUtils.getContext(object), permissions);
 
         if (failPermissions.length == 0) {
             //证明权限已经全部授予过
@@ -103,12 +96,10 @@ public class EasyPermission {
      */
     public static void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
-        EasyRequestBackCall call = mHashMap.get(requestCode);
+        OnRequestCallBack call = mHashMap.get(requestCode);
 
         //根据请求码取出的对象为空，就直接返回不处理
-        if (call == null) {
-            return;
-        }
+        if (call == null) return;
 
         //再次获取没有授予的权限
         String[] failPermissions = PermissionUtils.getFailPermissions(permissions, grantResults);

@@ -1,4 +1,4 @@
-package com.hjq.md.permission;
+package com.hjq.permission;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -9,18 +9,18 @@ import java.util.HashMap;
  * Created by HJQ on 2017-5-9.
  */
 
-public class SimplePermission {
+public final class SimplePermission extends BasePermission {
 
     //不能被实例化
     private SimplePermission() {}
 
-    private static HashMap<Integer, Object> mHashMap = new HashMap();
+    private final static HashMap<Integer, Object> mHashMap = new HashMap();
 
     /**
      * 请求权限，需要指定请求码，请求结果通过调用Activity或者Fragment注解方法的方式实现
      * @param activity          Activity对象
      * @param requestCode       本次申请权限的请求码
-     * @param permissions       需要请求的权限组
+     * @param permissions       需要请求的权限组，可变参数类型
      */
     public static void requestPermissions(Activity activity, int requestCode, String... permissions) {
         requestPermissions((Object) activity, requestCode, permissions);
@@ -30,7 +30,7 @@ public class SimplePermission {
      * 请求权限，需要指定请求码，请求结果通过调用Activity或者Fragment注解方法的方式实现
      * @param fragment          Fragment对象
      * @param requestCode       本次申请权限的请求码
-     * @param permissions       需要请求的权限组
+     * @param permissions       需要请求的权限组，可变参数类型
      */
     public static void requestPermissions(Fragment fragment, int requestCode, String... permissions) {
         requestPermissions((Object) fragment, requestCode, permissions);
@@ -40,7 +40,7 @@ public class SimplePermission {
      * 请求权限，需要指定请求码，请求结果通过调用Activity或者Fragment注解方法的方式实现
      * @param fragment          v4包下的Fragment对象
      * @param requestCode       本次申请权限的请求码
-     * @param permissions       需要请求的权限组
+     * @param permissions       需要请求的权限组，可变参数类型
      */
     public static void requestPermissions(android.support.v4.app.Fragment fragment, int requestCode, String... permissions) {
         requestPermissions((Object) fragment, requestCode, permissions);
@@ -52,17 +52,9 @@ public class SimplePermission {
 
         PermissionUtils.isEmptyPermissions(permissions);
 
-        if (permissions.length == 0) {
-            throw new IllegalArgumentException("需要请求的权限必须指定一个及以上");
-        }
+        if (requestCode > 65535) throw new IllegalArgumentException(requestCode + "请求码不能太大");
 
-        //如果版本不是6.0及以上,通过注解的形式，反射执行方法
-        if(!(PermissionUtils.isOverMarshmallow())) {
-            PermissionUtils.executeSucceesMethod(object, requestCode, permissions);
-            return;
-        }
-
-        String[] failPermissions = PermissionUtils.getFailPermissions(object, permissions);
+        String[] failPermissions = PermissionUtils.getFailPermissions(PermissionUtils.getContext(object), permissions);
 
         if (failPermissions.length == 0) {
             //证明权限已经全部授予过
@@ -83,9 +75,7 @@ public class SimplePermission {
         Object object = mHashMap.get(requestCode);
 
         //根据请求码取出的对象为空，就直接返回不处理
-        if (object == null) {
-            return;
-        }
+        if (object == null) return;
 
         //再次获取没有授予的权限
         String[] failPermissions = PermissionUtils.getFailPermissions(permissions, grantResults);
