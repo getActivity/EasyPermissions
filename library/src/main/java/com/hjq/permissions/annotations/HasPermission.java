@@ -11,9 +11,4 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface HasPermission {
-    /**
-     * 权限请求码
-     */
-    int value();
-}
+public @interface HasPermission {}

@@ -1,10 +1,14 @@
-package com.hjq.permissions;
+package com.hjq.permissions.request;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.support.v4.app.ActivityCompat;
 import android.util.SparseArray;
 
-import java.util.Arrays;
+import com.hjq.permissions.call.OnRequestCallBack;
+import com.hjq.permissions.bean.PermissionInfo;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -54,7 +58,7 @@ public final class EasyPermissions {
         request((Object) fragment, call, permissions);
     }
 
-    private final static SparseArray<OnRequestCallBack> mContainer = new SparseArray<>();
+    private final static SparseArray mContainer = new SparseArray<>();
 
     private static long requestTime;
 
@@ -74,18 +78,18 @@ public final class EasyPermissions {
             requestCode = new Random().nextInt(255);//Eclipse编译的APK请求码必须小于256
         } while (mContainer.get(requestCode) != null);
 
-        List<String> failPermissions = PermissionUtils.getFailPermissions(PermissionUtils.getContext(object), permissions);
-
-        if (failPermissions.isEmpty()) {
+        if (PermissionUtils.getFailPermissions(PermissionUtils.getActivity(object), permissions).length == 0) {
             //证明权限已经全部授予过
-            call.hasPermission(Arrays.asList(permissions));
+            call.hasPermission(PermissionUtils.arrayConversion(permissions, true, false, false));
         } else {
             //将当前的请求码和对象添加到集合中
             mContainer.put(requestCode, call);
-            //记录本次申请时间
+            //将Activity或Fragment对象保存到集合中
+            mContainer.put(requestCode + 1, object);
+            //记录本次请求时间
             requestTime = System.currentTimeMillis();
             //申请没有授予过的权限
-            PermissionUtils.requestPermissions(object, failPermissions, requestCode);
+            PermissionUtils.requestPermissions(object, permissions, requestCode);
         }
     }
 
@@ -94,27 +98,35 @@ public final class EasyPermissions {
      */
     public static void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
 
-        OnRequestCallBack call = mContainer.get(requestCode);
-
         //根据请求码取出的对象为空，就直接返回不处理
-        if (call == null) return;
+        if (mContainer.get(requestCode) == null || mContainer.get(requestCode + 1) == null) return;
 
-        List<String> succeedPermissions = PermissionUtils.getSucceedPermissions(permissions, grantResults);
-        List<String> failPermissions = PermissionUtils.getFailPermissions(permissions, grantResults);
-        //如果请求成功的权限集合大小和请求的数组一样大时证明权限已经全部授予
-        if (succeedPermissions.size() == permissions.length) {
-            //代表申请的所有的权限都授予了
-            call.hasPermission(succeedPermissions);
-        }else {
-            //代表申请的权限中有不同意授予的，如果拒绝的时间过快证明是系统自动拒绝
-            call.noPermission(failPermissions, System.currentTimeMillis() - requestTime < 200);
-            //证明还有一部分权限被成功授予，回调成功接口
-            if (!succeedPermissions.isEmpty()) {
-                call.hasPermission(succeedPermissions);
+        OnRequestCallBack call = (OnRequestCallBack) mContainer.get(requestCode);
+        Object object = mContainer.get(requestCode + 1);
+
+        String[] succeedPermissions = PermissionUtils.getSucceedPermissions(permissions, grantResults);
+        String[] failPermissions = PermissionUtils.getFailPermissions(permissions, grantResults);
+
+
+        //证明有部分或者全部权限被成功授予
+        if (succeedPermissions.length != 0) {
+            call.hasPermission(PermissionUtils.arrayConversion(succeedPermissions, true, false, false));
+        }
+
+        //证明有部分或者全部权限被拒绝授予
+        if (failPermissions.length != 0) {
+            List<PermissionInfo> infos = new ArrayList<>();
+            for (String permission : failPermissions) {
+                infos.add(new PermissionInfo().setName(permission).setGranted(false)
+                        .setPermanent(PermissionUtils.checkPermissionPermanentDenied(PermissionUtils.getActivity(object), permission))
+                        .setExplain(ActivityCompat.shouldShowRequestPermissionRationale(PermissionUtils.getActivity(object), permission)));
             }
+            //如果拒绝的时间过快证明是系统自动拒绝
+            call.noPermission(infos, System.currentTimeMillis() - requestTime < 200);
         }
 
         //权限回调结束后要删除集合中的对象，避免重复请求
         mContainer.remove(requestCode);
+        mContainer.remove(requestCode + 1);
     }
 }

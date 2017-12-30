@@ -1,4 +1,6 @@
-package com.hjq.permissions;
+package com.hjq.permissions.call;
+
+import com.hjq.permissions.bean.PermissionInfo;
 
 import java.util.List;
 
@@ -15,13 +17,13 @@ public interface OnRequestCallBack {
      *
      * @param granted        请求成功的权限组
      */
-    void hasPermission(List<String> granted);
+    void hasPermission(List<PermissionInfo> granted);
 
     /**
      * 有权限被拒绝授予时回调
      *
      * @param denied            请求失败的权限组
-     * @param permanent         是否永久拒绝了此权限
+     * @param quick             是否为系统自动拒绝的
      */
-    void noPermission(List<String> denied, boolean permanent);
+    void noPermission(List<PermissionInfo> denied, boolean quick);
 }
